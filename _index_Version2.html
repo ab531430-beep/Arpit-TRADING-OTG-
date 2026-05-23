@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arpit Trading OTG - Live Crypto Trading Platform</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        header {
+            background: rgba(15, 15, 30, 0.98);
+            border-bottom: 2px solid #00d4ff;
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.2);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00d4ff, #0099ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        nav {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        nav button {
+            color: #e0e0e0;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 5px 10px;
+            transition: color 0.3s;
+            font-family: inherit;
+            font-weight: 500;
+        }
+
+        nav button:hover {
+            color: #00d4ff;
+        }
+
+        .tab-container {
+            display: none;
+            padding: 40px 0;
+        }
+
+        .tab-container.active {
+            display: block;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #00d4ff, #0099ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .coins-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .coin-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .coin-card:hover {
+            transform: translateY(-5px);
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .coin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .coin-name {
+            color: #00d4ff;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .coin-symbol {
+            color: #a0a0a0;
+            font-size: 12px;
+        }
+
+        .coin-price {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .price-change {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: inline-block;
+        }
+
+        .price-change.positive {
+            background: rgba(0, 255, 100, 0.2);
+            color: #00ff64;
+        }
+
+        .price-change.negative {
+            background: rgba(255, 0, 100, 0.2);
+            color: #ff0064;
+        }
+
+        .coin-volume {
+            color: #a0a0a0;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .chart-wrapper {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .chart-btn {
+            padding: 8px 15px;
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        .chart-btn.active {
+            background: #00d4ff;
+            color: #000;
+        }
+
+        .chart-btn:hover {
+            background: #00d4ff;
+            color: #000;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .calculator-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #00d4ff;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 5px;
+            color: #e0e0e0;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #00d4ff, #0099ff);
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 212, 255, 0.3);
+        }
+
+        .result {
+            background: rgba(0, 212, 255, 0.1);
+            border-left: 4px solid #00d4ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            color: #a0a0a0;
+        }
+
+        .result-value {
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chat-message {
+            padding: 12px 15px;
+            border-radius: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #00d4ff, #0099ff);
+            color: #000;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background: rgba(0, 212, 255, 0.2);
+            color: #e0e0e0;
+            border-left: 3px solid #00d4ff;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            border-top: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .chat-input input {
+            flex: 1;
+        }
+
+        .chat-input button {
+            padding: 10px 20px;
+            background: #00d4ff;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chat-input button:hover {
+            background: #0099ff;
+            transform: translateY(-2px);
+        }
+
+        .board-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+
+        .board-form {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            height: fit-content;
+        }
+
+        .board-posts {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .post {
+            background: rgba(0, 212, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 3px solid #00d4ff;
+        }
+
+        .post-author {
+            color: #00d4ff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .post-text {
+            color: #e0e0e0;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+
+        .post-time {
+            color: #a0a0a0;
+            font-size: 11px;
+        }
+
+        footer {
+            background: rgba(15, 15, 30, 0.95);
+            border-top: 2px solid #00d4ff;
+            padding: 30px 0;
+            text-align: center;
+            color: #a0a0a0;
+            margin-top: 60px;
+        }
+
+        @media (max-width: 768px) {
+            .calculator-grid, .board-container { grid-template-columns: 1fr; }
+            .coins-grid { grid-template-columns: 1fr; }
+            nav { gap: 10px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">🚀 Arpit Trading OTG</div>
+            <nav>
+                <button onclick="switchTab('live-coins')">Live Coins</button>
+                <button onclick="switchTab('charts')">Charts</button>
+                <button onclick="switchTab('calculator')">Calculator</button>
+                <button onclick="switchTab('alerts')">Alerts</button>
+                <button onclick="switchTab('chat')">AI Chat</button>
+                <button onclick="switchTab('board')">Board</button>
+                <button onclick="switchTab('smc-course')">SMC Course</button>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Live Coins -->
+        <div id="live-coins" class="tab-container active">
+            <h2>📊 Live Cryptocurrency Prices</h2>
+            <div style="text-align: center; margin-bottom: 30px;">
+                <button class="chart-btn" onclick="filterCoins('all')">All Coins</button>
+                <button class="chart-btn" onclick="filterCoins('bullish')">Bullish</button>
+                <button class="chart-btn" onclick="filterCoins('altcoins')">Altcoins</button>
+                <button class="chart-btn" onclick="filterCoins('small-cap')">Small Cap</button>
+            </div>
+            <div id="coinsContainer" class="coins-grid"></div>
+        </div>
+
+        <!-- Charts -->
+        <div id="charts" class="tab-container">
+            <h2>📈 Live Trading Charts</h2>
+            <div class="chart-wrapper">
+                <div class="chart-controls">
+                    <button class="chart-btn active" onclick="loadChart('bitcoin')">BTC</button>
+                    <button class="chart-btn" onclick="loadChart('ethereum')">ETH</button>
+                    <button class="chart-btn" onclick="loadChart('binancecoin')">BNB</button>
+                    <button class="chart-btn" onclick="loadChart('solana')">SOL</button>
+                    <button class="chart-btn" onclick="loadChart('ripple')">XRP</button>
+                </div>
+                <canvas id="priceChart" height="80"></canvas>
+            </div>
+        </div>
+
+        <!-- Calculator -->
+        <div id="calculator" class="tab-container">
+            <h2>🧮 Position Sizing & Risk Calculator</h2>
+            <div class="calculator-grid">
+                <div class="calculator-box">
+                    <h3 style="color: #00d4ff; margin-bottom: 20px;">Position Sizing</h3>
+                    <div class="input-group">
+                        <label>Account Balance ($)</label>
+                        <input type="number" id="accountBalance" value="10000">
+                    </div>
+                    <div class="input-group">
+                        <label>Risk Per Trade (%)</label>
+                        <input type="number" id="riskPercent" value="2" min="0.1" max="10" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label>Entry Price ($)</label>
+                        <input type="number" id="entryPrice" value="45230">
+                    </div>
+                    <div class="input-group">
+                        <label>Stop Loss Price ($)</label>
+                        <input type="number" id="stopLossPrice" value="44000">
+                    </div>
+                    <div class="input-group">
+                        <label>Take Profit Price ($)</label>
+                        <input type="number" id="takeProfitPrice" value="47000">
+                    </div>
+                    <button class="btn" onclick="calculatePosition()">Calculate</button>
+                    <div id="positionResult"></div>
+                </div>
+
+                <div class="calculator-box">
+                    <h3 style="color: #00d4ff; margin-bottom: 20px;">Leverage Calculator</h3>
+                    <div class="input-group">
+                        <label>Position Size ($)</label>
+                        <input type="number" id="positionSize" value="5000">
+                    </div>
+                    <div class="input-group">
+                        <label>Leverage</label>
+                        <select id="leverage" onchange="calculateLeverage()">
+                            <option value="1">1x (Spot)</option>
+                            <option value="2">2x</option>\n                            <option value="5">5x</option>
+                            <option value="10">10x</option>
+                            <option value="20">20x</option>
+                            <option value="50">50x</option>
+                            <option value="100">100x</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Margin (%)</label>
+                        <input type="number" id="marginPercent" value="5" min="0.1" max="20" step="0.1">
+                    </div>
+                    <button class="btn" onclick="calculateLeverage()">Calculate</button>
+                    <div id="leverageResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div id="alerts" class="tab-container">
+            <h2>🔔 Live Price Alerts</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 25px; border-radius: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">
+                    <h3 style="color: #00d4ff; margin-bottom: 15px;">Add New Alert</h3>
+                    <div class="input-group">
+                        <label>Coin Symbol</label>
+                        <input type="text" id="alertCoin" value="BTC">
+                    </div>
+                    <div class="input-group">
+                        <label>Alert Type</label>
+                        <select id="alertType">
+                            <option value="above">Price Above</option>
+                            <option value="below">Price Below</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Price ($)</label>
+                        <input type="number" id="alertPrice">
+                    </div>
+                    <button class="btn" onclick="addPriceAlert()">Set Alert</button>
+                </div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">
+                <h3 style="color: #00d4ff; margin-bottom: 20px;">Active Alerts</h3>
+                <div id="alertsList"><p style="color: #a0a0a0;">No alerts set yet.</p></div>
+            </div>
+        </div>
+
+        <!-- Chat -->
+        <div id="chat" class="tab-container">
+            <h2>🤖 AI Trading Assistant</h2>
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="ai-message">नमस्ते! 👋 मैं Arpit Trading का AI हूँ। Ask me about BTC, SMC, position sizing, risk management, or leverage. Trade smart. Manage risk. 📊</div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="अपना सवाल पूछें..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+                    <button onclick="sendChatMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Board -->
+        <div id="board" class="tab-container">
+            <h2>📢 Trading Community Board</h2>
+            <div class="board-container">
+                <div class="board-form">
+                    <h3 style="color: #00d4ff; margin-bottom: 20px;">Share Analysis</h3>
+                    <div class="input-group">
+                        <label>Name</label>
+                        <input type="text" id="boardName">
+                    </div>
+                    <div class="input-group">
+                        <label>Coin/Topic</label>
+                        <input type="text" id="boardCoin">
+                    </div>
+                    <div class="input-group">
+                        <label>Message</label>
+                        <textarea id="boardMessage" style="min-height: 100px;"></textarea>
+                    </div>
+                    <button class="btn" onclick="postToBoard()">Post</button>
+                </div>
+                <div class="board-posts">
+                    <h3 style="color: #00d4ff; margin-bottom: 20px;">Posts</h3>
+                    <div id="boardPostsContainer"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SMC Course -->
+        <div id="smc-course" class="tab-container">
+            <h2>📚 SMC Complete Course</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 25px; border-radius: 10px; border-left: 4px solid #00d4ff;">
+                    <h3 style="color: #00d4ff;">Module 1: Market Structure</h3>
+                    <ul style="color: #a0a0a0; list-style-position: inside; margin-top: 10px;">
+                        <li>Higher Highs & Lows</li>
+                        <li>BOS & CHOCH</li>
+                        <li>Trend ID</li>\n                    </ul>\n                </div>\n                <div style="background: rgba(255, 255, 255, 0.05); padding: 25px; border-radius: 10px; border-left: 4px solid #0099ff;">\n                    <h3 style="color: #0099ff;">Module 2: Order Blocks</h3>\n                    <ul style="color: #a0a0a0; list-style-position: inside; margin-top: 10px;">\n                        <li>Block ID</li>\n                        <li>Supply/Demand</li>\n                        <li>Entry Strategy</li>\n                    </ul>\n                </div>\n                <div style="background: rgba(255, 255, 255, 0.05); padding: 25px; border-radius: 10px; border-left: 4px solid #00ff64;">\n                    <h3 style="color: #00ff64;">Module 3: Fair Value Gaps</h3>\n                    <ul style="color: #a0a0a0; list-style-position: inside; margin-top: 10px;">\n                        <li>FVG ID</li>\n                        <li>Gap Mitigation</li>\n                        <li>Sweeps</li>\n                    </ul>\n                </div>\n            </div>\n        </div>\n    </div>\n\n    <footer>\n        <div class=\"container\">\n            <h3 style=\"color: #00d4ff; margin-bottom: 15px;\">🚀 Arpit Trading OTG</h3>\n            <p>Professional Crypto Trading Education & Live Platform</p>\n            <p style=\"margin-top: 15px; color: #a0a0a0;\">Trade smart. Manage risk. ⚠️ Crypto carries extreme risk. Never trade with money you can't afford to lose.</p>\n        </div>\n    </footer>\n\n    <script>\n        let currentChart = null;\n        let boardPosts = JSON.parse(localStorage.getItem('boardPosts')) || [];\n        let priceAlerts = JSON.parse(localStorage.getItem('priceAlerts')) || [];\n\n        function switchTab(tabName) {\n            document.querySelectorAll('.tab-container').forEach(el => el.classList.remove('active'));\n            document.getElementById(tabName).classList.add('active');\n            if (tabName === 'live-coins') fetchLiveCoins();\n            if (tabName === 'charts') loadChart('bitcoin');\n            if (tabName === 'board') displayBoardPosts();\n        }\n\n        async function fetchLiveCoins() {\n            try {\n                const container = document.getElementById('coinsContainer');\n                container.innerHTML = '<div style=\"text-align: center; color: #a0a0a0;\">Loading...</div>';\n                const response = await axios.get('https://api.coingecko.com/api/v3/coins/markets', {\n                    params: { vs_currency: 'usd', order: 'market_cap_desc', per_page: 50 }\n                });\n                displayCoins(response.data);\n            } catch (error) {\n                document.getElementById('coinsContainer').innerHTML = '<p style=\"color: #ff0064;\">Error loading data</p>';\n            }\n        }\n\n        function displayCoins(coins) {\n            const container = document.getElementById('coinsContainer');\n            container.innerHTML = coins.map(coin => `\n                <div class=\"coin-card\">\n                    <div class=\"coin-header\">\n                        <div>\n                            <div class=\"coin-name\">${coin.name}</div>\n                            <div class=\"coin-symbol\">${coin.symbol.toUpperCase()}</div>\n                        </div>\n                        <img src=\"${coin.image}\" style=\"width: 40px; height: 40px; border-radius: 50%;\">\n                    </div>\n                    <div class=\"coin-price\">$${coin.current_price.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>\n                    <span class=\"price-change ${(coin.price_change_percentage_24h || 0) >= 0 ? 'positive' : 'negative'}\">\n                        ${(coin.price_change_percentage_24h || 0) >= 0 ? '+' : ''}${(coin.price_change_percentage_24h || 0).toFixed(2)}%\n                    </span>\n                </div>\n            `).join('');\n        }\n\n        function filterCoins(type) {\n            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));\n            event.target.classList.add('active');\n            fetchLiveCoins();\n        }\n\n        async function loadChart(coin) {\n            try {\n                const response = await axios.get(`https://api.coingecko.com/api/v3/coins/${coin}/market_chart`, {\n                    params: { vs_currency: 'usd', days: '30', interval: 'daily' }\n                });\n                const prices = response.data.prices;\n                const labels = prices.map(p => new Date(p[0]).toLocaleDateString('en-US', {month: 'short', day: 'numeric'}));\n                const data = prices.map(p => p[1]);\n                if (currentChart) currentChart.destroy();\n                const ctx = document.getElementById('priceChart').getContext('2d');\n                currentChart = new Chart(ctx, {\n                    type: 'line',\n                    data: { labels, datasets: [{label: `${coin.toUpperCase()}`, data, borderColor: '#00d4ff', backgroundColor: 'rgba(0, 212, 255, 0.1)', borderWidth: 2, fill: true, tension: 0.3}] },\n                    options: { responsive: true, plugins: {legend: {labels: {color: '#a0a0a0'}}}, scales: {y: {grid: {color: 'rgba(0, 212, 255, 0.1)'}, ticks: {color: '#a0a0a0'}}, x: {grid: {color: 'rgba(0, 212, 255, 0.1)'}, ticks: {color: '#a0a0a0'}}} }\n                });\n            } catch (error) { console.error(error); }\n        }\n\n        function calculatePosition() {\n            const accountBalance = parseFloat(document.getElementById('accountBalance').value);\n            const riskPercent = parseFloat(document.getElementById('riskPercent').value);\n            const entryPrice = parseFloat(document.getElementById('entryPrice').value);\n            const stopLossPrice = parseFloat(document.getElementById('stopLossPrice').value);\n            const takeProfitPrice = parseFloat(document.getElementById('takeProfitPrice').value);\n            const riskAmount = accountBalance * (riskPercent / 100);\n            const slDistance = Math.abs(entryPrice - stopLossPrice);\n            const positionSize = riskAmount / slDistance * entryPrice;\n            const riskReward = Math.abs(takeProfitPrice - entryPrice) / slDistance;\n            const potentialProfit = (takeProfitPrice - entryPrice) * (positionSize / entryPrice);\n            document.getElementById('positionResult').innerHTML = `\n                <div class=\"result\">\n                    <div class=\"result-item\"><span class=\"result-label\">Risk Amount:</span><span class=\"result-value\">$${riskAmount.toFixed(2)}</span></div>\n                    <div class=\"result-item\"><span class=\"result-label\">Position Value:</span><span class=\"result-value\">$${positionSize.toFixed(2)}</span></div>\n                    <div class=\"result-item\"><span class=\"result-label\">Risk-Reward:</span><span class=\"result-value\">1:${riskReward.toFixed(2)}</span></div>\n                    <div class=\"result-item\"><span class=\"result-label\">Potential Profit:</span><span class=\"result-value\" style=\"color: #00ff64;\">$${potentialProfit.toFixed(2)}</span></div>\n                </div>\n            `;\n        }\n\n        function calculateLeverage() {\n            const positionSize = parseFloat(document.getElementById('positionSize').value);\n            const leverage = parseFloat(document.getElementById('leverage').value);\n            const marginPercent = parseFloat(document.getElementById('marginPercent').value);\n            const requiredMargin = positionSize / leverage;\n            const maxLoss = requiredMargin * (marginPercent / 100);\n            document.getElementById('leverageResult').innerHTML = `\n                <div class=\"result\">\n                    <div class=\"result-item\"><span class=\"result-label\">Position:</span><span class=\"result-value\">$${positionSize.toFixed(2)}</span></div>\n                    <div class=\"result-item\"><span class=\"result-label\">Required Margin:</span><span class=\"result-value\">$${requiredMargin.toFixed(2)}</span></div>\n                    <div class=\"result-item\"><span class=\"result-label\">Max Loss:</span><span class=\"result-value\" style=\"color: #ff0064;\">$${maxLoss.toFixed(2)}</span></div>\n                </div>\n            `;\n        }\n\n        function addPriceAlert() {\n            const coin = document.getElementById('alertCoin').value.toUpperCase();\n            const type = document.getElementById('alertType').value;\n            const price = parseFloat(document.getElementById('alertPrice').value);\n            if (!coin || !price) { alert('Fill all fields'); return; }\n            priceAlerts.push({coin, type, price, timestamp: new Date().toLocaleTimeString()});\n            localStorage.setItem('priceAlerts', JSON.stringify(priceAlerts));\n            document.getElementById('alertCoin').value = '';\n            document.getElementById('alertPrice').value = '';\n            displayAlerts();\n        }\n\n        function displayAlerts() {\n            const list = document.getElementById('alertsList');\n            list.innerHTML = priceAlerts.length === 0 ? '<p style=\"color: #a0a0a0;\">No alerts set</p>' : priceAlerts.map((a, i) => `\n                <div style=\"background: rgba(0, 212, 255, 0.05); padding: 15px; border-radius: 8px; margin-bottom: 10px;\">\n                    <div style=\"display: flex; justify-content: space-between;\">\n                        <div><strong style=\"color: #00d4ff;\">${a.coin}</strong> - ${a.type} <strong>$${a.price.toFixed(2)}</strong></div>\n                        <button onclick=\"removeAlert(${i})\" style=\"padding: 5px 10px; background: #ff0064; border: none; border-radius: 5px; color: white; cursor: pointer;\">✕</button>\n                    </div>\n                </div>\n            `).join('');\n        }\n\n        function removeAlert(i) { priceAlerts.splice(i, 1); localStorage.setItem('priceAlerts', JSON.stringify(priceAlerts)); displayAlerts(); }\n\n        const aiResponses = {\n            'btc': 'BTC important liquidity zone ke paas. Market structure break wait karo. Volume dekho. Trade smart.',\n            'smc': 'SMC = Smart Money Concept. Order Blocks, FVGs, Liquidity Zones, BOS, CHOCH. Institution tracking!',\n            'position': 'Position sizing = Risk sirf 1-2% account per trade. Formula: Risk/SL Distance. Essential for survival!',\n            'leverage': 'Leverage: Beginners 2-5x, Intermediate 5-10x, Advanced 10x+. Always stop loss!',\n            'risk': 'Risk rules: 1. Risk 1-2% 2. Stop loss always 3. Risk-Reward 1:2+ 4. No revenge trading. Trade smart!',\n            'default': 'Namaste! 👋 Ask me about BTC, SMC, position sizing, risk, leverage. Trade smart. Manage risk.'\n        };\n\n        function sendChatMessage() {\n            const input = document.getElementById('chatInput');\n            const message = input.value.trim();\n            if (!message) return;\n            const messagesDiv = document.getElementById('chatMessages');\n            const userMsg = document.createElement('div');\n            userMsg.className = 'chat-message user-message';\n            userMsg.textContent = message;\n            messagesDiv.appendChild(userMsg);\n            let response = aiResponses['default'];\n            for (const key in aiResponses) {\n                if (message.toLowerCase().includes(key)) { response = aiResponses[key]; break; }\n            }\n            setTimeout(() => {\n                const aiMsg = document.createElement('div');\n                aiMsg.className = 'chat-message ai-message';\n                aiMsg.textContent = response;\n                messagesDiv.appendChild(aiMsg);\n                messagesDiv.scrollTop = messagesDiv.scrollHeight;\n            }, 500);\n            input.value = '';\n            messagesDiv.scrollTop = messagesDiv.scrollHeight;\n        }\n\n        function postToBoard() {\n            const name = document.getElementById('boardName').value;\n            const coin = document.getElementById('boardCoin').value;\n            const message = document.getElementById('boardMessage').value;\n            if (!name || !coin || !message) { alert('Fill all fields'); return; }\n            boardPosts.unshift({author: name, coin, text: message, timestamp: new Date().toLocaleString()});\n            localStorage.setItem('boardPosts', JSON.stringify(boardPosts));\n            document.getElementById('boardName').value = '';\n            document.getElementById('boardCoin').value = '';\n            document.getElementById('boardMessage').value = '';\n            displayBoardPosts();\n        }\n\n        function displayBoardPosts() {\n            const container = document.getElementById('boardPostsContainer');\n            container.innerHTML = boardPosts.length === 0 ? '<p style=\"color: #a0a0a0;\">No posts yet.</p>' : boardPosts.map(p => `\n                <div class=\"post\">\n                    <div class=\"post-author\">${p.author} • ${p.coin}</div>\n                    <div class=\"post-text\">${p.text}</div>\n                    <div class=\"post-time\">${p.timestamp}</div>\n                </div>\n            `).join('');\n        }\n\n        window.addEventListener('load', () => { fetchLiveCoins(); displayAlerts(); });\n        setInterval(fetchLiveCoins, 30000);\n    </script>\n</body>\n</html>
